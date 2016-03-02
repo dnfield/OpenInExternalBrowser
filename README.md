@@ -4,4 +4,4 @@ This project contains a Visual Studio extension (2010-2013) which alters the beh
 Ctrl+Click in the editor to launch an external web browser instead of using the default
 in-process browser.
 
-Forked to add support for file:/// URIs, as well as options to select how to open the URI.
+Forked to add support for file:/// URIs, as well as options to select how to open URIs and whether to support others (mailto, ftp, telnet).
