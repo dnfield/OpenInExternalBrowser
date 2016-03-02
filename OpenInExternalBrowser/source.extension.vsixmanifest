@@ -2,9 +2,9 @@
 <Vsix Version="1.0.0" xmlns="http://schemas.microsoft.com/developer/vsx-schema/2010">
   <Identifier Id="Tvl.VisualStudio.OpenInExternalBrowser.AB302857-F9A9-4345-B930-FC99D0F80601">
     <Name>Open in External Browser</Name>
-    <Author>Sam Harwell</Author>
-    <Version>1.1.1</Version>
-    <Description xml:space="preserve">Alters the behavior of Ctrl+Click in the editor to open links in the default external browser</Description>
+    <Author>Sam Harwell, Dan Field</Author>
+    <Version>1.2.0</Version>
+    <Description xml:space="preserve">Alters the behavior of Ctrl+Click in the editor to open links</Description>
     <Locale>1033</Locale>
     <License>LICENSE</License>
     <!--<Icon>VSIXProject_small.png</Icon>
@@ -23,11 +23,20 @@
         <Edition>Pro</Edition>
       </VisualStudio>
     </SupportedProducts>
-    <SupportedFrameworkRuntimeEdition MinVersion="4.0" />
+    <SupportedFrameworkRuntimeEdition MinVersion="4.5" />
   </Identifier>
   <References />
 
   <Content>
+    <VsPackage>OpenInExternalBrowser.pkgdef</VsPackage>
     <MefComponent>|%CurrentProject%|</MefComponent>
   </Content>
 </Vsix>
+<!--
+    Please add the following element to PackageManifest\\Assets:
+    <Asset Type="Microsoft.VisualStudio.VsPackage" d:Source="Project" d:ProjectName="%CurrentProject%" Path="|%CurrentProject%;PkgdefProjectOutputGroup|" />
+-->
+<!--
+    Please add the following element to PackageManifest\\Dependencies:
+    <Dependency Id="Microsoft.VisualStudio.MPF.14.0" DisplayName="Visual Studio MPF 14.0" d:Source="Installed" Version="[14.0]" />
+-->

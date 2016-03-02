@@ -4,6 +4,7 @@
 namespace Tvl.VisualStudio.OpenInExternalBrowser
 {
     using System.ComponentModel.Composition;
+
     using Microsoft.VisualStudio.Editor;
     using Microsoft.VisualStudio.Shell;
     using Microsoft.VisualStudio.Text.Editor;

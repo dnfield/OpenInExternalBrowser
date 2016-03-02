@@ -13,7 +13,7 @@ namespace Tvl.VisualStudio.OpenInExternalBrowser
     using OLECMDF = Microsoft.VisualStudio.OLE.Interop.OLECMDF;
     using OleConstants = Microsoft.VisualStudio.OLE.Interop.Constants;
     using VsMenus = Microsoft.VisualStudio.Shell.VsMenus;
-
+    using Microsoft.VisualStudio.Shell;
     /// <summary>
     /// This is the base class for implementations of <see cref="IOleCommandTarget"/> in managed code.
     /// </summary>

@@ -52,18 +52,18 @@ namespace Tvl.VisualStudio.OpenInExternalBrowser
             {
                 switch ((VSConstants.VSStd2KCmdID)commandId)
                 {
-                case VSConstants.VSStd2KCmdID.OPENURL:
-                    if (pvaIn != IntPtr.Zero)
-                    {
-                        int line = (int)Marshal.GetObjectForNativeVariant(pvaIn);
-                        int column = (int)Marshal.GetObjectForNativeVariant(new IntPtr(pvaIn.ToInt32() + 16));
-                        return TryOpenUrlAtPoint(line, column);
-                    }
+                    case VSConstants.VSStd2KCmdID.OPENURL:
+                        if (pvaIn != IntPtr.Zero)
+                        {
+                            int line = (int)Marshal.GetObjectForNativeVariant(pvaIn);
+                            int column = (int)Marshal.GetObjectForNativeVariant(new IntPtr(pvaIn.ToInt32() + 16));
+                            return TryOpenUrlAtPoint(line, column);
+                        }
 
-                    return TryOpenUrlAtCaret();
+                        return TryOpenUrlAtCaret();
 
-                default:
-                    break;
+                    default:
+                        break;
                 }
             }
 
@@ -146,36 +146,109 @@ namespace Tvl.VisualStudio.OpenInExternalBrowser
             if (!uri.IsAbsoluteUri)
                 return false;
 
-            /* First try to use the Web Browsing Service. This is not known to work because the
-             * CreateExternalWebBrowser method always returns E_NOTIMPL. However, it is presumably
-             * safer than a Shell Execute for arbitrary URIs.
-             */
-            IVsWebBrowsingService service = _serviceProvider.GetService(typeof(SVsWebBrowsingService)) as IVsWebBrowsingService;
-            if (service != null)
+            Settings settings = Settings.Load();
+
+            if (uri.IsFile == true)
             {
-                __VSCREATEWEBBROWSER createFlags = __VSCREATEWEBBROWSER.VSCWB_AutoShow;
-                VSPREVIEWRESOLUTION resolution = VSPREVIEWRESOLUTION.PR_Default;
-                int result = ErrorHandler.CallWithCOMConvention(() => service.CreateExternalWebBrowser((uint)createFlags, resolution, uri.AbsoluteUri));
-                if (ErrorHandler.Succeeded(result))
+                try
+                {
+                    if (settings.UseVsEditor == true)
+                    {
+                        IVsCommandWindow cmdw = (IVsCommandWindow)_serviceProvider.GetService(typeof(SVsCommandWindow));
+                        if (cmdw == null) return false;
+
+                        cmdw.ExecuteCommand("of \"" + uri.AbsolutePath + "\"");
+                    }
+                    else
+                    {
+                        Process.Start(settings.FileSchemeHandler, uri.AbsolutePath);
+                    }
+
                     return true;
-            }
+                }
+                catch (Win32Exception wex)
+                {
+                    System.Diagnostics.Debug.WriteLine(wex.ToString());
+                }
+                catch (FileNotFoundException fnex)
+                {
+                    System.Diagnostics.Debug.WriteLine(fnex.ToString());
+                }
 
+            }
             // Fall back to Shell Execute, but only for http or https URIs
-            if (uri.Scheme != "http" && uri.Scheme != "https")
+            else if ((uri.Scheme == "http" || uri.Scheme == "https") && settings.HttpHttpsEnabled)
+            {
+                /* First try to use the Web Browsing Service. This is not known to work because the
+                 * CreateExternalWebBrowser method always returns E_NOTIMPL. However, it is presumably
+                 * safer than a Shell Execute for arbitrary URIs.
+                 */
+                IVsWebBrowsingService service = _serviceProvider.GetService(typeof(SVsWebBrowsingService)) as IVsWebBrowsingService;
+                if (service != null)
+                {
+                    __VSCREATEWEBBROWSER createFlags = __VSCREATEWEBBROWSER.VSCWB_AutoShow;
+                    VSPREVIEWRESOLUTION resolution = VSPREVIEWRESOLUTION.PR_Default;
+                    int result = ErrorHandler.CallWithCOMConvention(() => service.CreateExternalWebBrowser((uint)createFlags, resolution, uri.AbsoluteUri));
+                    if (ErrorHandler.Succeeded(result))
+                        return true;
+                }
+
+                try
+                {
+                    Process.Start(uri.AbsoluteUri);
+                    return true;
+                }
+                catch (Win32Exception)
+                {
+                }
+                catch (FileNotFoundException)
+                {
+                }
+            }
+            else if (uri.Scheme == "mailto" && settings.MailEnabled)
+            {
+                try
+                {
+                    Process.Start(uri.AbsoluteUri);
+                    return true;
+                }
+                catch (Win32Exception)
+                {
+                }
+                catch (FileNotFoundException)
+                {
+                }
+            }
+            else if (uri.Scheme == "telnet" && !string.IsNullOrWhiteSpace(settings.TelnetClient))
+            {
+                try
+                {
+                    Process.Start(settings.TelnetClient, uri.AbsolutePath);
+                    return true;
+                }
+                catch (Win32Exception)
+                {
+                }
+                catch (FileNotFoundException)
+                {
+                }
+            }
+            else if (uri.Scheme == "ftp" && settings.FtpEnabled)
+            {
+                try
+                {
+                    Process.Start(uri.AbsoluteUri);
+                    return true;
+                }
+                catch (Win32Exception)
+                {
+                }
+                catch (FileNotFoundException)
+                {
+                }
+            }
+            else
                 return false;
-
-            try
-            {
-                Process.Start(uri.AbsoluteUri);
-                return true;
-            }
-            catch (Win32Exception)
-            {
-            }
-            catch (FileNotFoundException)
-            {
-            }
-
             return false;
         }
     }
